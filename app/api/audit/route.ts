@@ -1,19 +1,39 @@
-import nodemailer from 'nodemailer'
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server"
+import nodemailer from "nodemailer"
 
+export const runtime = "nodejs" // Nodemailer needs node runtime
+
+type AuditPayload = {
+  name?: string
+  email: string
+  website: string
+  adsBudget?: string
+  selectedPackage?: string // "39k" | "59k" | "nezvoleno" | ...
+}
 
 function escapeHtml(input: string) {
-  return (input || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
+  return (input || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;")
+}
+
+function normalizeWebsite(raw: string) {
+  const w = (raw || "").trim()
+  if (!w) return ""
+  if (/^https?:\/\//i.test(w)) return w
+  return `https://${w}`
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function makeRefId() {
   const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
+  const pad = (n: number) => String(n).padStart(2, "0")
   const y = d.getFullYear()
   const m = pad(d.getMonth() + 1)
   const day = pad(d.getDate())
@@ -23,6 +43,7 @@ function makeRefId() {
   return `AUD-${y}${m}${day}-${hh}${mm}${ss}`
 }
 
+// HTML potvrzení ve stejném "clean" stylu jako web (off-white + oranžová)
 function buildAutoReplyHtml(params: {
   name?: string
   website: string
@@ -30,20 +51,19 @@ function buildAutoReplyHtml(params: {
   selectedPackage?: string
   refId: string
 }) {
-  const name = params.name ? `, ${escapeHtml(params.name)}` : ''
+  const name = params.name ? `, ${escapeHtml(params.name)}` : ""
   const website = escapeHtml(params.website)
-  const adsBudget = params.adsBudget ? escapeHtml(params.adsBudget) : 'neuvedeno'
-  const pkg = params.selectedPackage ? escapeHtml(params.selectedPackage) : 'nezvoleno'
+  const adsBudget = params.adsBudget ? escapeHtml(params.adsBudget) : "neuvedeno"
+  const pkg = params.selectedPackage ? escapeHtml(params.selectedPackage) : "nezvoleno"
   const refId = escapeHtml(params.refId)
   const year = String(new Date().getFullYear())
 
-  // Barvy podle webu (off-white + oranžový akcent)
-  const bg = '#F7F4EF'
-  const card = '#FBF8F3'
-  const border = '#EFE7DD'
-  const text = '#111111'
-  const muted = '#7A746C'
-  const cta = '#C46A1D'
+  const bg = "#F7F4EF"
+  const card = "#FBF8F3"
+  const border = "#EFE7DD"
+  const text = "#111111"
+  const muted = "#7A746C"
+  const cta = "#C46A1D"
 
   return `<!doctype html>
 <html lang="cs">
@@ -200,131 +220,119 @@ function buildAutoReplyHtml(params: {
 </html>`
 }
 
-type Payload = {
-  name: string
-  email: string
-  website: string
-  adsBudget?: string
-  selectedPackage?: string
-  timestamp?: string
+function ensureEnv() {
+  const missing: string[] = []
+  if (!process.env.SMTP_HOST) missing.push("SMTP_HOST")
+  if (!process.env.SMTP_USER) missing.push("SMTP_USER")
+  if (!process.env.SMTP_PASS) missing.push("SMTP_PASS")
+  // SMTP_PORT optional
+  if (!process.env.MAIL_TO) missing.push("MAIL_TO") // where internal notifications go
+  // MAIL_FROM optional
+  return missing
+}
+
+function createTransporter() {
+  const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587
+  const secure = port === 465 // common pattern
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  })
 }
 
 export async function POST(req: Request) {
-  let data: Payload
   try {
-    data = await req.json()
-  } catch {
-    return new NextResponse('Invalid JSON', { status: 400 })
-  }
+    const missing = ensureEnv()
+    if (missing.length) {
+      return NextResponse.json(
+        { ok: false, error: `Email is not configured. Set ${missing.join(", ")}.` },
+        { status: 500 }
+      )
+    }
 
-  const {
-    name,
-    email,
-    website,
-    adsBudget = '',
-    selectedPackage = 'nezvoleno',
-    timestamp = new Date().toISOString(),
-  } = data || {}
+    const payload = (await req.json()) as Partial<AuditPayload>
 
-  if (!name || !email || !website) {
-    return new NextResponse('Missing required fields', { status: 400 })
-  }
+    const name = (payload.name || "").trim()
+    const email = (payload.email || "").trim()
+    const websiteRaw = (payload.website || "").trim()
+    const website = normalizeWebsite(websiteRaw)
+    const adsBudget = (payload.adsBudget || "").trim()
+    const selectedPackage = (payload.selectedPackage || "").trim() || "nezvoleno"
 
-  const SMTP_HOST = process.env.SMTP_HOST
-  const SMTP_PORT = Number(process.env.SMTP_PORT || 465)
-  const SMTP_USER = process.env.SMTP_USER
-  const SMTP_PASS = process.env.SMTP_PASS
-  const MAIL_TO = process.env.MAIL_TO || 'info@leadflow-performance.cz'
-  const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER || MAIL_TO
+    if (!email || !isValidEmail(email)) {
+      return NextResponse.json({ ok: false, error: "Neplatný email." }, { status: 400 })
+    }
+    if (!websiteRaw) {
+      return NextResponse.json({ ok: false, error: "Chybí URL webu." }, { status: 400 })
+    }
 
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    return new NextResponse(
-      'Email is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS (and optionally SMTP_PORT, MAIL_TO, MAIL_FROM).',
-      { status: 500 }
-    )
-  }
+    const refId = makeRefId()
 
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  })
+    const transporter = createTransporter()
+    const mailFrom = process.env.MAIL_FROM || process.env.SMTP_USER!
+    const mailTo = process.env.MAIL_TO!
 
+    // 1) INTERNAL MAIL (to you)
+    const internalSubject = `LeadFlow audit – ${selectedPackage} – ${websiteRaw} – ${refId}`
+    const internalText = [
+      "Nová žádost o bezplatný audit",
+      "",
+      `Balíček: ${selectedPackage}`,
+      `Čas: ${new Date().toISOString()}`,
+      "",
+      `Jméno: ${name || "(neuvedeno)"}`,
+      `Email: ${email}`,
+      `Web: ${websiteRaw}`,
+      `Rozpočet Google Ads: ${adsBudget || "neuvedeno"}`,
+      "",
+      `Reference: ${refId}`,
+      "",
+      `Odesláno z ${new URL(req.url).host}`,
+    ].join("\n")
 
-  const subject = `LeadFlow audit – ${selectedPackage} – ${website}`
-
-  const refId = makeRefId()
-
-  const subject = `LeadFlow audit – ${selectedPackage} – ${website} – ${refId}`
-  const text = [
-    'Nová žádost o bezplatný audit',
-    '',
-    `Balíček: ${selectedPackage}`,
-
-    `Reference: ${refId}`,
-    `Čas: ${timestamp}`,
-    '',
-    `Jméno: ${name}`,
-    `Email: ${email}`,
-    `Web: ${website}`,
-    `Rozpočet Google Ads: ${adsBudget || '-'}`,
-    '',
-    '—',
-    'Odesláno z leadflow-performance.cz',
-  ].join('\n')
-
-  try {
-
-    // 1) interní notifikace
     await transporter.sendMail({
-      from: MAIL_FROM,
-      to: MAIL_TO,
-      replyTo: email,
-      subject,
-      text,
+      from: mailFrom,
+      to: mailTo,
+      subject: internalSubject,
+      text: internalText,
+      replyTo: email, // when you hit reply, it goes to client
     })
 
-    // 2) potvrzení zákazníkovi (ve stylu webu)
-    const customerSubject = 'Audit přijat – ozveme se do 48 hodin'
-    const customerText = [
-      `Dobrý den${name ? `, ${name}` : ''},`,
-      '',
-      'děkujeme — vaši žádost o bezplatný audit jsme přijali.',
-      'Do 48 hodin pošleme konkrétní rozbor, kde ztrácíte poptávky.',
-      '',
-      'Shrnutí:',
-      `Web: ${website}`,
-      `Rozpočet Google Ads: ${adsBudget || 'neuvedeno'}`,
-      `Balíček: ${selectedPackage || 'nezvoleno'}`,
-      `Reference ID: ${refId}`,
-      '',
-      'Pokud chcete audit zpřesnit, odpovězte a doplňte:',
-      '1) Hlavní službu',
-      '2) Lokalitu',
-      '3) Cíl (více poptávek / nižší cena za lead / stabilita)',
-      '',
-      'LeadFlow Performance',
-      'info@leadflow-performance.cz',
-    ].join('\n')
+    // 2) AUTO-REPLY (to client)
+    const customerSubject = "Audit přijat – ozveme se do 48 hodin"
+    const customerText = `Dobrý den${name ? `, ${name}` : ""},
 
+děkujeme — vaši žádost o bezplatný audit jsme přijali.
+Do 48 hodin pošleme konkrétní rozbor, kde ztrácíte poptávky.
+
+Shrnutí:
+Web: ${websiteRaw}
+Rozpočet Google Ads: ${adsBudget || "neuvedeno"}
+Balíček: ${selectedPackage}
+Reference ID: ${refId}
+
+LeadFlow Performance
+info@leadflow-performance.cz
+`
     await transporter.sendMail({
-      from: MAIL_FROM,
+      from: mailFrom,
       to: email,
-      replyTo: MAIL_TO,
       subject: customerSubject,
       text: customerText,
       html: buildAutoReplyHtml({
-        name,
-        website,
+        name: name || undefined,
+        website: websiteRaw,
         adsBudget: adsBudget || undefined,
-        selectedPackage: selectedPackage || undefined,
+        selectedPackage,
         refId,
       }),
     })
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, refId })
   } catch (err: any) {
-    return new NextResponse(`Failed to send email: ${err?.message || 'unknown error'}`, { status: 500 })
+    const message = err?.message || "Unknown error"
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
