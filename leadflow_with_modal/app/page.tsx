@@ -15,7 +15,7 @@ const jsonLd = {
   name: "LeadFlow Performance",
   url: "https://leadflow-performance.cz",
   email: "info@leadflow-performance.cz",
-  telephone: "+420123456789",
+  telephone: "+420773299233",
   description:
     "Optimalizace landing pages a konverzní strategie pro montážní firmy v oboru fotovoltaiky, tepelných čerpadel a klimatizací. Zvyšujeme počet poptávek z Google Ads.",
   areaServed: {

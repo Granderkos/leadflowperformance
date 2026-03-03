@@ -34,11 +34,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="tel:+420123456789"
+                  href="tel:+420773299233"
                   className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <Phone className="h-4 w-4" aria-hidden="true" />
-                  +420 123 456 789
+                  +420 773 299 233
                 </a>
               </li>
             </ul>
