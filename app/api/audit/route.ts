@@ -130,7 +130,6 @@ function buildAutoReplyHtml(params: {
                       <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:${text};">
                         <b>Web:</b> ${website}<br>
                         <b>Rozpočet Google Ads:</b> ${adsBudget}<br>
-                        <b>Balíček:</b> ${pkg}
                       </div>
                     </td></tr>
                   </table>
@@ -310,7 +309,6 @@ Do 48 hodin pošleme konkrétní rozbor, kde ztrácíte poptávky.
 Shrnutí:
 Web: ${websiteRaw}
 Rozpočet Google Ads: ${adsBudget || "neuvedeno"}
-Balíček: ${selectedPackage}
 Reference ID: ${refId}
 
 LeadFlow Performance
