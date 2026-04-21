@@ -87,29 +87,31 @@ export function PricingSection() {
 
               <div className="my-8 h-px bg-border" role="separator" />
 
-              <ul className="flex flex-col gap-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10" aria-hidden="true">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex-1">
+                <ul className="flex flex-col gap-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10" aria-hidden="true">
+                        <Check className="h-3 w-3 text-primary" />
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
 
-              {"footer" in plan && plan.footer && (
-                <p className="mt-4 text-xs text-muted-foreground italic">
-                  {plan.footer}
-                </p>
-              )}
+                {"footer" in plan && plan.footer && (
+                  <p className="mt-4 text-xs text-muted-foreground italic">
+                    {plan.footer}
+                  </p>
+                )}
+              </div>
 
               <a
                 href="#cta"
                 onClick={() => handlePlanClick(plan.price.includes("39") ? '39k' : plan.price.includes("59") ? '59k' : '39k')}
-                className={`mt-auto pt-6 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
+                className={`mt-8 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
                   plan.highlight
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg"
                     : "border border-border text-foreground hover:bg-accent hover:border-primary/20"
