@@ -65,10 +65,10 @@ export function ProcessSection() {
 
         <div className="mt-14 flex justify-center">
           <a
-            href="#cta"
+            href="#audit"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
           >
-            Začít bezplatným auditem
+            Získat první zjištění zdarma
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </a>
         </div>

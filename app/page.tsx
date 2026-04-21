@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { ProblemSection } from "@/components/problem-section"
 import { SolutionSection } from "@/components/solution-section"
+import { AuditCardsSection } from "@/components/audit-cards-section"
 import { ProcessSection } from "@/components/process-section"
 import { SocialProofSection } from "@/components/social-proof-section"
 import { PricingSection } from "@/components/pricing-section"
@@ -88,6 +89,7 @@ export default function Page() {
         <HeroSection />
         <ProblemSection />
         <SolutionSection />
+        <AuditCardsSection />
         <ProcessSection />
         <SocialProofSection />
         <PricingSection />
