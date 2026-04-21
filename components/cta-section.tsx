@@ -22,7 +22,7 @@ export function CtaSection() {
           }
           className="inline-flex items-center justify-center bg-primary text-primary-foreground px-6 py-3 rounded-lg text-base font-medium hover:opacity-90 transition"
         >
-          Chci bezplatný audit →
+          Získat první zjištění zdarma
         </button>
 
         <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">

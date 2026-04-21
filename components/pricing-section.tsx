@@ -4,6 +4,20 @@ import { Check, ArrowRight } from "lucide-react"
 
 const plans = [
   {
+    name: "Audit webu",
+    price: "2 000 Kč",
+    description: "Kompletní technická analýza webu s prioritizací změn.",
+    features: [
+      "Analýza rychlosti (Core Web Vitals)",
+      "Kontrola struktury stránky",
+      "Revize CTA a formulářů",
+      "Mobilní použitelnost",
+      "Kontrola měření konverzí",
+      "Prioritní seznam úprav",
+    ],
+    footer: "Cena se odečítá z ceny realizace.",
+  },
+  {
     name: "Performance Landing",
     price: "39 000 Kč",
     description: "",
@@ -46,7 +60,7 @@ export function PricingSection() {
           </h2>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-4xl gap-6 md:grid-cols-2">
+        <div className="mx-auto mt-16 grid max-w-5xl gap-6 md:grid-cols-3">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -86,10 +100,16 @@ export function PricingSection() {
                 ))}
               </ul>
 
+              {"footer" in plan && plan.footer && (
+                <p className="mt-4 text-xs text-muted-foreground italic">
+                  {plan.footer}
+                </p>
+              )}
+
               <a
                 href="#cta"
-                onClick={() => handlePlanClick(plan.price.includes("39") ? '39k' : '59k')}
-                className={`mt-8 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
+                onClick={() => handlePlanClick(plan.price.includes("39") ? '39k' : plan.price.includes("59") ? '59k' : '39k')}
+                className={`mt-auto pt-6 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${
                   plan.highlight
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg"
                     : "border border-border text-foreground hover:bg-accent hover:border-primary/20"

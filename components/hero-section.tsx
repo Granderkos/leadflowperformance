@@ -25,11 +25,11 @@ export function HeroSection() {
             id="hero-heading"
             className="text-balance text-4xl font-bold leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-6xl"
           >
-            {"Získejte více poptávek z\u00A0Google Ads. Bez navýšení rozpočtu."}
+            {"Získejte více poptávek z\u00A0Google Ads bez navýšení rozpočtu"}
           </h1>
 
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground lg:text-lg">
-            Optimalizujeme landing pages pro montážní firmy tak, aby kliknutí skutečně končila poptávkou.
+            Najdeme konkrétní problém, který brání vašemu webu získávat více poptávek.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
@@ -38,7 +38,7 @@ export function HeroSection() {
               onClick={() => openAuditModal()}
               className="inline-flex items-center gap-2.5 rounded-lg bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25"
             >
-              Chci bezplatný audit
+              Získat první zjištění zdarma
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <a

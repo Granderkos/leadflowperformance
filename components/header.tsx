@@ -43,7 +43,7 @@ export function Header() {
             onClick={() => openAuditModal()}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            {"Bezplatný audit"}
+            {"První zjištění zdarma"}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
@@ -76,7 +76,7 @@ export function Header() {
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               onClick={() => { setOpen(false); openAuditModal(); }}
             >
-              {"Bezplatný audit"}
+              {"První zjištění zdarma"}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </nav>
